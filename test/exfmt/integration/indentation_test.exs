@@ -14,4 +14,16 @@ defmodule Exfmt.Integration.IndentationTest do
         end
     """
   end
+
+  test "multiple lines of code padded with blank lines" do
+    assert_format """
+
+        fn(x) ->
+          y = x + x
+          y
+        end
+
+
+    """
+  end
 end

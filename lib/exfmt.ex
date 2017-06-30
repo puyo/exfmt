@@ -84,6 +84,7 @@ defmodule Exfmt do
   @spec unsafe_format(String.t, integer) :: {:ok, String.t} | SyntaxError.t
   def unsafe_format(source, max_width \\ @max_width) do
     indent = leading_indent(source)
+    leading_whitespace = leading_whitespace(source, indent)
     trailing_whitespace = trailing_whitespace(source)
 
     with {:ok, tree} <- Code.string_to_quoted(source),
@@ -93,6 +94,7 @@ defmodule Exfmt do
         |> do_format(comments, max_width - indent)
         |> add_leading_indent(indent)
         |> add_trailing_whitespace(trailing_whitespace)
+        |> add_leading_whitespace(leading_whitespace)
         |> strip_trailing_line_whitespace
       {:ok, result}
     else
@@ -134,6 +136,9 @@ defmodule Exfmt do
 
 
   defp leading_indent(source, indent \\ 0)
+  defp leading_indent("\n" <> rest, indent) do
+    leading_indent(rest, indent)
+  end
   defp leading_indent(" " <> rest, indent) do
     leading_indent(rest, indent + 1)
   end
@@ -155,10 +160,24 @@ defmodule Exfmt do
   end
 
 
+  defp leading_whitespace(source, indent) do
+    regex_result = Regex.run(~r/\A(\s*)/m, source)
+    [capture | _rest] = regex_result || [""]
+    # remove leading indent from leading whitespace capture, as it gets added back anyway
+    capture_len = String.length(capture)
+    String.slice(capture, 0, capture_len - indent)
+  end
+
+
   defp trailing_whitespace(source) do
     regex_result = Regex.run(~r/(\n\s*)\Z/m, source)
     [capture | _rest] = regex_result || [""]
     capture
+  end
+
+
+  defp add_leading_whitespace(source, leading_whitespace) do
+    leading_whitespace <> source
   end
 
 
