@@ -3,36 +3,36 @@ defmodule Exfmt.Integration.BasicsTest do
   import Support.Integration
 
   test "ints" do
-    "0" ~> "0\n"
-    "1" ~> "1\n"
-    "2" ~> "2\n"
-    "-0" ~> "-0\n"
-    "-1" ~> "-1\n"
-    "-2" ~> "-2\n"
+    "0" ~> "0"
+    "1" ~> "1"
+    "2" ~> "2"
+    "-0" ~> "-0"
+    "-1" ~> "-1"
+    "-2" ~> "-2"
   end
 
   test "floats" do
-    "0.000" ~> "0.0\n"
-    "1.111" ~> "1.111\n"
-    "2.08" ~> "2.08\n"
-    "-0.000" ~> "-0.0\n"
-    "-0.123" ~> "-0.123\n"
-    "-1.123" ~> "-1.123\n"
-    "-2.123" ~> "-2.123\n"
+    "0.000" ~> "0.0"
+    "1.111" ~> "1.111"
+    "2.08" ~> "2.08"
+    "-0.000" ~> "-0.0"
+    "-0.123" ~> "-0.123"
+    "-1.123" ~> "-1.123"
+    "-2.123" ~> "-2.123"
   end
 
   test "atoms" do
-    ":ok" ~> ":ok\n"
-    ":\"hello-world\"" ~> ":\"hello-world\"\n"
-    ":\"[]\"" ~> ":\"[]\"\n"
-    ":_" ~> ":_\n"
+    ":ok" ~> ":ok"
+    ":\"hello-world\"" ~> ":\"hello-world\""
+    ":\"[]\"" ~> ":\"[]\""
+    ":_" ~> ":_"
   end
 
   test "aliases" do
-    "String" ~> "String\n"
-    "My.String" ~> "My.String\n"
-    "App.Web.Controller" ~> "App.Web.Controller\n"
-    "__MODULE__.Helper" ~> "__MODULE__.Helper\n"
+    "String" ~> "String"
+    "My.String" ~> "My.String"
+    "App.Web.Controller" ~> "App.Web.Controller"
+    "__MODULE__.Helper" ~> "__MODULE__.Helper"
   end
 
   test "aliases with variable part" do
@@ -42,11 +42,11 @@ defmodule Exfmt.Integration.BasicsTest do
   end
 
   test "keyword lists" do
-    "[]" ~> "[]\n"
-    "[a: 1]" ~> "[a: 1]\n"
-    "[ b:  {} ]" ~> "[b: {}]\n"
-    "[a: 1, b: 2]" ~> "[a: 1, b: 2]\n"
-    "[{:a, 1}]" ~> "[a: 1]\n"
+    "[]" ~> "[]"
+    "[a: 1]" ~> "[a: 1]"
+    "[ b:  {} ]" ~> "[b: {}]"
+    "[a: 1, b: 2]" ~> "[a: 1, b: 2]"
+    "[{:a, 1}]" ~> "[a: 1]"
   end
 
   test "keyword lists with special atom keys" do
@@ -56,12 +56,12 @@ defmodule Exfmt.Integration.BasicsTest do
   end
 
   test "charlists" do
-    "''" ~> "[]\n"
-    "'a'" ~> "[97]\n" # TODO: Hmm...
+    "''" ~> "[]"
+    "'a'" ~> "[97]" # TODO: Hmm...
   end
 
   test "lists" do
-    "[ ]" ~> "[]\n"
+    "[ ]" ~> "[]"
     """
     [0,1,2,3,4,5,6,7,8,9,10,11,12]
     """ ~> """
@@ -139,22 +139,22 @@ defmodule Exfmt.Integration.BasicsTest do
 
 
   test "tuples" do
-    "{}" ~> "{}\n"
-    "{1}" ~> "{1}\n"
-    "{1,2}" ~> "{1, 2}\n"
-    "{1,2,3}" ~> "{1, 2, 3}\n"
+    "{}" ~> "{}"
+    "{1}" ~> "{1}"
+    "{1,2}" ~> "{1, 2}"
+    "{1,2,3}" ~> "{1, 2, 3}"
   end
 
   test "variables" do
-    "some_var" ~> "some_var\n"
-    "_another_var" ~> "_another_var\n"
-    "thing1" ~> "thing1\n"
+    "some_var" ~> "some_var"
+    "_another_var" ~> "_another_var"
+    "thing1" ~> "thing1"
   end
 
   test "module attributes" do
-    "@size" ~> "@size\n"
-    "@foo 1" ~> "@foo 1\n"
-    "@tag :skip" ~> "@tag :skip\n"
+    "@size" ~> "@size"
+    "@foo 1" ~> "@foo 1"
+    "@tag :skip" ~> "@tag :skip"
     """
     @sizes [1,2,3,4,5,6,7,8,9,10,11]
     """ ~> """
@@ -173,26 +173,26 @@ defmodule Exfmt.Integration.BasicsTest do
   end
 
   test "Access protocol" do
-    assert_format "keys[:name]\n"
-    assert_format "conn.assigns[:safe_mode_active]\n"
-    "some_list[\n   :name\n]" ~> "some_list[:name]\n"
+    assert_format "keys[:name]"
+    assert_format "conn.assigns[:safe_mode_active]"
+    "some_list[\n   :name]" ~> "some_list[:name]"
   end
 
   test "maths" do
-    "1 + 2" ~> "1 + 2\n"
-    "1 - 2" ~> "1 - 2\n"
-    "1 * 2" ~> "1 * 2\n"
-    "1 / 2" ~> "1 / 2\n"
-    "1 * 2 + 3" ~> "1 * 2 + 3\n"
-    "1 + 2 * 3" ~> "1 + 2 * 3\n"
-    "(1 + 2) * 3" ~> "(1 + 2) * 3\n"
-    "(1 - 2) * 3" ~> "(1 - 2) * 3\n"
-    "1 / 2 + 3" ~> "1 / 2 + 3\n"
-    "1 + 2 / 3" ~> "1 + 2 / 3\n"
-    "(1 + 2) / 3" ~> "(1 + 2) / 3\n"
-    "(1 - 2) / 3" ~> "(1 - 2) / 3\n"
-    "1 * 2 / 3" ~> "1 * 2 / 3\n"
-    "1 / 2 * 3" ~> "1 / 2 * 3\n"
+    "1 + 2" ~> "1 + 2"
+    "1 - 2" ~> "1 - 2"
+    "1 * 2" ~> "1 * 2"
+    "1 / 2" ~> "1 / 2"
+    "1 * 2 + 3" ~> "1 * 2 + 3"
+    "1 + 2 * 3" ~> "1 + 2 * 3"
+    "(1 + 2) * 3" ~> "(1 + 2) * 3"
+    "(1 - 2) * 3" ~> "(1 - 2) * 3"
+    "1 / 2 + 3" ~> "1 / 2 + 3"
+    "1 + 2 / 3" ~> "1 + 2 / 3"
+    "(1 + 2) / 3" ~> "(1 + 2) / 3"
+    "(1 - 2) / 3" ~> "(1 - 2) / 3"
+    "1 * 2 / 3" ~> "1 * 2 / 3"
+    "1 / 2 * 3" ~> "1 / 2 * 3"
     """
     something_really_really_really_really_long + 2
     """ ~> """
@@ -202,49 +202,49 @@ defmodule Exfmt.Integration.BasicsTest do
   end
 
   test "list patterns" do
-    "[head1, head2|tail]" ~> "[head1, head2 | tail]\n"
+    "[head1, head2|tail]" ~> "[head1, head2 | tail]"
   end
 
   test "magic variables" do
-    "__MODULE__" ~> "__MODULE__\n"
-    "__CALLER__" ~> "__CALLER__\n"
+    "__MODULE__" ~> "__MODULE__"
+    "__CALLER__" ~> "__CALLER__"
   end
 
   test "booleans" do
-    "true" ~> "true\n"
-    "false" ~> "false\n"
+    "true" ~> "true"
+    "false" ~> "false"
   end
 
   test "||" do
-    "true || true" ~> "true || true\n"
+    "true || true" ~> "true || true"
   end
 
   test "&&" do
-    "true && true" ~> "true && true\n"
+    "true && true" ~> "true && true"
   end
 
   test "or" do
-    "true or true" ~> "true or true\n"
+    "true or true" ~> "true or true"
   end
 
   test "and" do
-    "true and true" ~> "true and true\n"
+    "true and true" ~> "true and true"
   end
 
   test "in" do
-    "x in [1, 2]" ~> "x in [1, 2]\n"
+    "x in [1, 2]" ~> "x in [1, 2]"
   end
 
   test "~>" do
-    "x ~> [1, 2]" ~> "x ~> [1, 2]\n"
+    "x ~> [1, 2]" ~> "x ~> [1, 2]"
   end
 
   test ">>>" do
-    "x >>> [1, 2]" ~> "x >>> [1, 2]\n"
+    "x >>> [1, 2]" ~> "x >>> [1, 2]"
   end
 
   test "<>" do
-    "x <> y" ~> "x <> y\n"
+    "x <> y" ~> "x <> y"
   end
 
   test "pipes |>" do

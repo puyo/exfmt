@@ -20,7 +20,7 @@ defmodule Exfmt do
   Format a string of Elixir source code.
 
       iex> format("[1,2,3]")
-      {:ok, "[1, 2, 3]\n"}
+      {:ok, "[1, 2, 3]"}
 
   This function performs a check to ensure the input and output
   are semantically equivalent.
@@ -51,7 +51,7 @@ defmodule Exfmt do
   in the event of failure.
 
       iex> format!("[1,2,3]")
-      "[1, 2, 3]\n"
+      "[1, 2, 3]"
 
   This function performs a check to ensure the input and output
   are semantically equivalent.
@@ -73,7 +73,7 @@ defmodule Exfmt do
   Format a string of Elixir source code.
 
       iex> unsafe_format("[1,2,3]")
-      {:ok, "[1, 2, 3]\n"}
+      {:ok, "[1, 2, 3]"}
 
   Unlike `format/2` and `format!/2` this code does not compare
   the semantics of the input and the output, so if there is a
@@ -84,14 +84,16 @@ defmodule Exfmt do
   @spec unsafe_format(String.t, integer) :: {:ok, String.t} | SyntaxError.t
   def unsafe_format(source, max_width \\ @max_width) do
     indent = leading_indent(source)
+    trailing_whitespace = trailing_whitespace(source)
+
     with {:ok, tree} <- Code.string_to_quoted(source),
          {:ok, comments} <- Comment.extract_comments(source) do
       result =
         tree
         |> do_format(comments, max_width - indent)
-        |> add_indent(indent)
-        |> trim_whitespace
-        |> append_newline
+        |> add_leading_indent(indent)
+        |> add_trailing_whitespace(trailing_whitespace)
+        |> strip_trailing_line_whitespace
       {:ok, result}
     else
       {:error, error} ->
@@ -128,25 +130,6 @@ defmodule Exfmt do
     |> Ast.to_algebra(Context.new)
     |> Algebra.format(max_width)
     |> IO.chardata_to_string()
-    |> trim_whitespace()
-  end
-
-
-  #
-  # FIXME: We shouldn't need to trim whitespace like this.
-  # Prevent the printer from inserting indentation with no
-  # content afterwards.
-  #
-  @trim_pattern ~r/\n +\n/
-  defp trim_whitespace(source) do
-    source
-    |> String.replace(@trim_pattern, "\n\n")
-    |> String.replace(@trim_pattern, "\n\n")
-  end
-
-
-  defp append_newline(source) do
-    source <> "\n"
   end
 
 
@@ -159,7 +142,7 @@ defmodule Exfmt do
   end
 
 
-  defp add_indent(source, indent) do
+  defp add_leading_indent(source, indent) do
     source
     |> String.split("\n")
     |> Enum.map(&add_indent_to_line(&1, indent))
@@ -169,5 +152,25 @@ defmodule Exfmt do
 
   defp add_indent_to_line(line, indent) do
     String.duplicate(" ", indent) <> line
+  end
+
+
+  defp trailing_whitespace(source) do
+    regex_result = Regex.run(~r/(\n\s*)\Z/m, source)
+    [capture | _rest] = regex_result || [""]
+    capture
+  end
+
+
+  defp add_trailing_whitespace(source, trailing_whitespace) do
+    source <> trailing_whitespace
+  end
+
+
+  defp strip_trailing_line_whitespace(source) do
+    source
+    |> String.split("\n")
+    |> Enum.map(&String.rstrip/1)
+    |> Enum.join("\n")
   end
 end
