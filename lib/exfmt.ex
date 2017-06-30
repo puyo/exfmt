@@ -83,12 +83,16 @@ defmodule Exfmt do
   """
   @spec unsafe_format(String.t, integer) :: {:ok, String.t} | SyntaxError.t
   def unsafe_format(source, max_width \\ @max_width) do
-    with indent <- leading_indent(source),
-         {:ok, tree} <- Code.string_to_quoted(source),
-         {:ok, comments} <- Comment.extract_comments(source),
-         formatted <- do_format(tree, comments, max_width - indent),
-         reindented <- add_indent(formatted, indent) do
-      {:ok, append_newline(trim_whitespace(reindented))}
+    indent = leading_indent(source)
+    with {:ok, tree} <- Code.string_to_quoted(source),
+         {:ok, comments} <- Comment.extract_comments(source) do
+      result =
+        tree
+        |> do_format(comments, max_width - indent)
+        |> add_indent(indent)
+        |> trim_whitespace
+        |> append_newline
+      {:ok, result}
     else
       {:error, error} ->
         SyntaxError.exception(error)
