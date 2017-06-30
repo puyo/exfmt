@@ -23,3 +23,6 @@ erl_crash.dump
 /tmp
 /*.exs
 !mix.exs
+
+# Tags
+TAGS
