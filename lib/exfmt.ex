@@ -83,9 +83,12 @@ defmodule Exfmt do
   """
   @spec unsafe_format(String.t, integer) :: {:ok, String.t} | SyntaxError.t
   def unsafe_format(source, max_width \\ @max_width) do
-    with {:ok, tree} <- Code.string_to_quoted(source),
-         {:ok, comments} <- Comment.extract_comments(source) do
-      {:ok, do_format(tree, comments, max_width)}
+    with indent <- leading_indent(source),
+         {:ok, tree} <- Code.string_to_quoted(source),
+         {:ok, comments} <- Comment.extract_comments(source),
+         formatted <- do_format(tree, comments, max_width - indent),
+         reindented <- add_indent(formatted, indent) do
+      {:ok, append_newline(trim_whitespace(reindented))}
     else
       {:error, error} ->
         SyntaxError.exception(error)
@@ -122,7 +125,6 @@ defmodule Exfmt do
     |> Algebra.format(max_width)
     |> IO.chardata_to_string()
     |> trim_whitespace()
-    |> append_newline()
   end
 
 
@@ -141,5 +143,27 @@ defmodule Exfmt do
 
   defp append_newline(source) do
     source <> "\n"
+  end
+
+
+  defp leading_indent(source, indent \\ 0)
+  defp leading_indent(" " <> rest, indent) do
+    leading_indent(rest, indent + 1)
+  end
+  defp leading_indent(_source, indent) do
+    indent
+  end
+
+
+  defp add_indent(source, indent) do
+    source
+    |> String.split("\n")
+    |> Enum.map(&add_indent_to_line(&1, indent))
+    |> Enum.join("\n")
+  end
+
+
+  defp add_indent_to_line(line, indent) do
+    String.duplicate(" ", indent) <> line
   end
 end
