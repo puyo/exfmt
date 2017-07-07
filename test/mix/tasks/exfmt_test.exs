@@ -11,6 +11,13 @@ defmodule Mix.Tasks.ExfmtTest do
       assert io =~ "mix exfmt path/to/file.ex"
     end
 
+    test "with --pipe" do
+      output = capture_io("[1,2,3]", fn ->
+        Mix.Tasks.Exfmt.run(["--pipe"])
+      end)
+      assert output =~ "[1, 2, 3]"
+    end
+
     test "path to unknown file" do
       io = capture_io(fn->
         Mix.Tasks.Exfmt.run(["unknown-path-here"])
