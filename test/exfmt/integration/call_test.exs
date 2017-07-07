@@ -16,9 +16,11 @@ defmodule Exfmt.Integration.CallTest do
     """
     very_long_function_name_here([100, 200, 300])
     """ ~> """
-    very_long_function_name_here [100,
-                                  200,
-                                  300]
+    very_long_function_name_here [
+                                   100,
+                                   200,
+                                   300
+                                 ]
     """
   end
 
@@ -31,15 +33,15 @@ defmodule Exfmt.Integration.CallTest do
     very_long_function_name_here.(:hello, :world)
     """ ~> """
     very_long_function_name_here.(:hello,
-                                  :world)
+      :world)
     """
     """
     very_long_function_name_here.(1, 2, 3, 4)
     """ ~> """
     very_long_function_name_here.(1,
-                                  2,
-                                  3,
-                                  4)
+      2,
+      3,
+      4)
     """
   end
 

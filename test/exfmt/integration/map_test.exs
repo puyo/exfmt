@@ -22,6 +22,16 @@ defmodule Exfmt.Integration.MapTest do
     assert_format "Map.new.key"
   end
 
+  test "long map" do
+    """
+    %{alpha_numeric_integer_long_name_with_lots_of_characters: 1}
+    """ ~> """
+    %{
+      alpha_numeric_integer_long_name_with_lots_of_characters: 1
+    }
+    """
+  end
+
   test "structs" do
     assert_format "%Person{}"
     assert_format "%Person{age: 1}"
@@ -30,8 +40,9 @@ defmodule Exfmt.Integration.MapTest do
     %LongerNamePerson{timmy | name: "Timmy", age: 1}
     """ ~> """
     %LongerNamePerson{timmy |
-                      name: "Timmy",
-                      age: 1}
+      name: "Timmy",
+      age: 1
+    }
     """
     assert_format "%Inspect.Opts{}"
   end
@@ -66,6 +77,16 @@ defmodule Exfmt.Integration.MapTest do
   test "update of map from function" do
     assert_format """
     %{zero(0) | rank: 1}
+    """
+  end
+
+  test "nested map" do
+    assert_format """
+    %{
+      very_long_variable_name_that_causes_break_mode: %{
+        "b" => 1
+      }
+    }
     """
   end
 end

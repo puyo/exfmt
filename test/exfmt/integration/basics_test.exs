@@ -60,80 +60,95 @@ defmodule Exfmt.Integration.BasicsTest do
     "'a'" ~> "[97]" # TODO: Hmm...
   end
 
+  test "long variable lists" do
+    """
+    ["a very long string that is too long to fit into the wrap width"]
+    """ ~> """
+    [
+      "a very long string that is too long to fit into the wrap width"
+    ]
+    """
+  end
+
   test "lists" do
     "[ ]" ~> "[]"
+
     """
     [0,1,2,3,4,5,6,7,8,9,10,11,12]
     """ ~> """
-    [0,
-     1,
-     2,
-     3,
-     4,
-     5,
-     6,
-     7,
-     8,
-     9,
-     10,
-     11,
-     12]
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ]
     """
   end
 
   test "really long lists" do
     assert_format """
-    [48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48,
-     48]
+    [
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48
+    ]
     """
   end
 
@@ -158,17 +173,19 @@ defmodule Exfmt.Integration.BasicsTest do
     """
     @sizes [1,2,3,4,5,6,7,8,9,10,11]
     """ ~> """
-    @sizes [1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11]
+    @sizes [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ]
     """
   end
 
@@ -193,6 +210,9 @@ defmodule Exfmt.Integration.BasicsTest do
     "(1 - 2) / 3" ~> "(1 - 2) / 3"
     "1 * 2 / 3" ~> "1 * 2 / 3"
     "1 / 2 * 3" ~> "1 / 2 * 3"
+  end
+
+  test "long variables in expressions" do
     """
     something_really_really_really_really_long + 2
     """ ~> """

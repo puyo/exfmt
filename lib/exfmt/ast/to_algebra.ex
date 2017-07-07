@@ -76,7 +76,16 @@ defmodule Exfmt.Ast.ToAlgebra do
     else
       {:kw, false} ->
         fun = fn(elem) -> to_algebra(elem, new_ctx) end
-        surround_many("[", list, "]", fun)
+
+        args_doc =
+          list
+          |> Enum.map(fun)
+          |> Enum.reduce(fn(e, acc) ->
+            glue(concat(acc, ","), e)
+          end)
+
+        nested = glue("[", "", args_doc)
+        group(glue(nest(nested, 2), "", "]"))
 
       {:la, _} ->
         fun = &keyword_to_algebra(&1, new_ctx)
@@ -92,9 +101,11 @@ defmodule Exfmt.Ast.ToAlgebra do
   #
   def to_algebra({:%, _, [name, {:%{}, _, args}]}, ctx) do
     name = to_algebra(name, ctx)
+    indent = 1
     start = concat(concat("%", name), "{")
     body_doc = map_body_to_algebra(args, ctx)
-    group(surround(start, nest(body_doc, :current), "}"))
+    nested = surround(start, body_doc, "")
+    group(glue(nest(nested, indent), "", "}"))
   end
 
   #
@@ -103,7 +114,8 @@ defmodule Exfmt.Ast.ToAlgebra do
   def to_algebra({:%{}, _, contents}, ctx) do
     new_ctx = Context.push_stack(ctx, :map)
     body_doc = map_body_to_algebra(contents, new_ctx)
-    group(nest(glue("%{", "", concat(body_doc, "}")), 2))
+    nested = glue("%{", "", body_doc)
+    group(glue(nest(nested, 2), "", "}"))
   end
 
   #
@@ -245,7 +257,7 @@ defmodule Exfmt.Ast.ToAlgebra do
     name_doc = to_algebra(name, new_ctx)
     head_doc = concat(name_doc, ".")
     args_doc = args_to_algebra(args, new_ctx, parens: true)
-    concat(head_doc, nest(args_doc, :current))
+    concat(head_doc, nest(args_doc, 1))
   end
 
   #
@@ -257,8 +269,7 @@ defmodule Exfmt.Ast.ToAlgebra do
 
   def to_algebra({:@, _, [{name, _, [value]}]}, ctx) do
     new_ctx = Context.push_stack(ctx, :module_attribute)
-    len = String.length(to_string(name)) + 2
-    concat("@#{name} ", nest(to_algebra(value, new_ctx), len))
+    concat("@#{name} ", nest(to_algebra(value, new_ctx), 2))
   end
 
   #
