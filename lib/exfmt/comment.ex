@@ -65,6 +65,15 @@ defmodule Exfmt.Comment do
 
   alias :elixir_interpolation, as: Interp
 
+  # Heredoc
+  defp extract([delim, delim, delim | src], line, comments)
+  when is_quote(delim) do
+    with {:ok, new_src, new_line} <- discard_heredoc(src, delim, line) do
+      extract(new_src, new_line, comments)
+    end
+  end
+
+  # Sigil heredoc
   defp extract([?~, char, delim, delim, delim | src], line, comments)
   when is_letter(char) and is_quote(delim) do
     with {:ok, new_src, new_line} <- discard_heredoc(src, delim, line) do
@@ -83,6 +92,11 @@ defmodule Exfmt.Comment do
       {:error, _reason} ->
         :error
     end
+  end
+
+  # Escaped char literal
+  defp extract([??, ?\\, c | src], line, comments) when is_quote(c) do
+    extract(src, line, comments)
   end
 
   # Char literal

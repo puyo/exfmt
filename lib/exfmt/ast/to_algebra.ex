@@ -44,6 +44,10 @@ defmodule Exfmt.Ast.ToAlgebra do
   #
   # Blocks
   #
+  def to_algebra({name, _, []}, ctx) when is_block(name) do
+    call_to_algebra("__block__", [], ctx)
+  end
+
   def to_algebra({name, _, exprs}, ctx) when is_block(name) do
     exprs
     |> Enum.map(&to_algebra(&1, ctx))
@@ -269,7 +273,15 @@ defmodule Exfmt.Ast.ToAlgebra do
 
   def to_algebra({:@, _, [{name, _, [value]}]}, ctx) do
     new_ctx = Context.push_stack(ctx, :module_attribute)
-    concat("@#{name} ", nest(to_algebra(value, new_ctx), 2))
+    head_doc = "@#{name}"
+    len = String.length(head_doc) + 1
+    value_doc = nest(to_algebra(value, new_ctx), len)
+    safe_value_doc = if Util.call_with_block?(value) do
+      surround("(", value_doc, ")")
+    else
+      value_doc
+    end
+    space(head_doc, safe_value_doc)
   end
 
   #
@@ -303,9 +315,8 @@ defmodule Exfmt.Ast.ToAlgebra do
   #
   def to_algebra({{:., m, [aliases, :{}]}, _, args}, ctx) do
     new_ctx = Context.push_stack(ctx, :call)
-    module = to_algebra(aliases, new_ctx) <> "."
-    mod_len = String.length(module)
-    concat(module, nest(to_algebra({:{}, m, args}, new_ctx), mod_len))
+    module = concat(to_algebra(aliases, new_ctx), ".")
+    concat(module, nest(to_algebra({:{}, m, args}, new_ctx), :current))
   end
 
   #
@@ -336,6 +347,16 @@ defmodule Exfmt.Ast.ToAlgebra do
   end
 
   #
+  # Call with function name from call
+  #   unquote(name)(arg)
+  #
+  def to_algebra({{_, _, _} = fun, _, args}, ctx) do
+    new_ctx = Context.push_stack(ctx, :chain_call)
+    fun_doc = to_algebra(fun, new_ctx)
+    call_to_algebra(fun_doc, args, new_ctx)
+  end
+
+  #
   # Any other function calls
   #
   def to_algebra({fun, _, args}, ctx) do
@@ -345,11 +366,24 @@ defmodule Exfmt.Ast.ToAlgebra do
   end
 
   #
-  # Atoms, strings, numbers
+  # Strings, numbers, nil, booleans
   #
-  def to_algebra(value, _ctx)
-  when is_atom(value) or is_binary(value) or is_number(value) do
+  def to_algebra(value, _ctx) when is_nil(value) or is_boolean(value) or
+                                   is_binary(value) or is_number(value) do
     to_doc(value)
+  end
+
+  #
+  # Atoms
+  #
+  def to_algebra(atom, _ctx) when is_atom(atom) do
+    case Atom.to_string(atom) do
+      ("Elixir" <> _) = string ->
+        ~S(:") <> string <> ~S(")
+
+      _ ->
+        to_doc(atom)
+    end
   end
 
   #
@@ -373,25 +407,15 @@ defmodule Exfmt.Ast.ToAlgebra do
 
   defp sigil_to_algebra(char, [{:<<>>, _, parts}, mods], ctx) do
     {open, close} = Sigil.delimiters(char, parts)
-    content_doc = sigil_parts_to_algebra(parts, open, close, ctx)
+    content_doc = interp_to_algebra(parts, ctx, open, close)
     open_doc = concat("~", List.to_string([char]))
     close_doc = List.to_string(mods)
     surround(open_doc, content_doc, close_doc)
   end
 
-
-  defp sigil_parts_to_algebra(parts, open, close, ctx) do
-    close_char = IO.iodata_to_binary([close])
-    maybe_escape = fn
-      part when is_binary(part) ->
-        binary_escape(part, close_char)
-
-      part ->
-        part
-    end
-    parts
-    |> Enum.map(maybe_escape)
-    |> interp_to_algebra(ctx, open, close)
+  defp sigil_to_algebra(char, args, ctx) do
+    new_ctx = Context.push_stack(ctx, :call)
+    call_to_algebra(IO.chardata_to_string(["sigil_", char]), args, new_ctx)
   end
 
 
@@ -640,21 +664,22 @@ defmodule Exfmt.Ast.ToAlgebra do
     binary_escape(contents, close, [])
   end
 
+  @slash ?\\
 
-  defp binary_escape(<<>>, _, acc) do
+  defp binary_escape(<<>>, _close, acc) do
     IO.chardata_to_string(acc)
   end
 
-  defp binary_escape(<<"\\\\"::utf8, rest::binary>>, close, acc) do
-    binary_escape(rest, close, [acc, "\\\\"])
+  defp binary_escape(<<@slash, @slash, rest::binary>>, close, acc) do
+    binary_escape(rest, close, [acc, @slash, @slash])
   end
 
-  defp binary_escape(<<"\\"::utf8, close::utf8, rest::binary>>, close, acc) do
-    binary_escape(rest, close, [acc, "\\\\", close])
+  defp binary_escape(<<@slash, close::utf8, rest::binary>>, close, acc) do
+    binary_escape(rest, close, [acc, @slash, @slash, @slash, close])
   end
 
   defp binary_escape(<<close::utf8, rest::binary>>, close, acc) do
-    binary_escape(rest, close, [acc, "\\", close])
+    binary_escape(rest, close, [acc, @slash, close])
   end
 
   defp binary_escape(<<char::utf8, rest::binary>>, close, acc) do

@@ -3,12 +3,12 @@ defmodule Exfmt.Integration.BasicsTest do
   import Support.Integration
 
   test "ints" do
-    "0" ~> "0"
-    "1" ~> "1"
-    "2" ~> "2"
-    "-0" ~> "-0"
-    "-1" ~> "-1"
-    "-2" ~> "-2"
+    assert_format "0"
+    assert_format "1"
+    assert_format "2"
+    assert_format "-0"
+    assert_format "-1"
+    assert_format "-2"
   end
 
   test "floats" do
@@ -22,10 +22,11 @@ defmodule Exfmt.Integration.BasicsTest do
   end
 
   test "atoms" do
-    ":ok" ~> ":ok"
-    ":\"hello-world\"" ~> ":\"hello-world\""
-    ":\"[]\"" ~> ":\"[]\""
-    ":_" ~> ":_"
+    assert_format ":ok"
+    assert_format ":\"hello-world\""
+    assert_format ":\"[]\""
+    assert_format ":_"
+    assert_format ~s(:"Elixir.Exfmt")
   end
 
   test "aliases" do
@@ -33,6 +34,12 @@ defmodule Exfmt.Integration.BasicsTest do
     "My.String" ~> "My.String"
     "App.Web.Controller" ~> "App.Web.Controller"
     "__MODULE__.Helper" ~> "__MODULE__.Helper"
+  end
+
+  test "alias with quoted base mod" do
+    assert_format """
+    alias unquote(Inspect).{Algebra}
+    """
   end
 
   test "aliases with variable part" do
@@ -174,18 +181,27 @@ defmodule Exfmt.Integration.BasicsTest do
     @sizes [1,2,3,4,5,6,7,8,9,10,11]
     """ ~> """
     @sizes [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11
-      ]
+             1,
+             2,
+             3,
+             4,
+             5,
+             6,
+             7,
+             8,
+             9,
+             10,
+             11
+           ]
+    """
+  end
+
+  test "module attribute with block call arg" do
+    assert_format """
+    @ok (case ok do
+           _ ->
+             :ok
+         end)
     """
   end
 
@@ -274,78 +290,6 @@ defmodule Exfmt.Integration.BasicsTest do
     1
     |> double()
     |> Number.triple
-    """
-  end
-
-  test "blocks" do
-    """
-    1 + 1
-    """ ~>
-    """
-    1 + 1
-    """
-    """
-    1 + 1
-    2 / 3
-    """ ~>
-    """
-    1 + 1
-    2 / 3
-    """
-    """
-    run(1)
-    run(2)
-    run(3)
-    """ ~>
-    """
-    run 1
-    run 2
-    run 3
-    """
-  end
-
-  test "do end blocks" do
-    """
-    test "hello" do
-      :ok
-    end
-    """ ~>
-    """
-    test "hello" do
-      :ok
-    end
-    """
-    """
-    if x do
-      :ok
-    else
-      :ok
-    end
-    """ ~>
-    """
-    if x do
-      :ok
-    else
-      :ok
-    end
-    """
-    """
-    run do
-      []
-    end
-    """ ~> """
-    run do
-      []
-    end
-    """
-    """
-    App.run do
-      []
-    end
-    """ ~> """
-    App.run do
-      []
-    end
     """
   end
 

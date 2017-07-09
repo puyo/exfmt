@@ -11,7 +11,10 @@ defmodule Exfmt.Integration.SigilTest do
     "~r[hello]" ~> "~r/hello/"
     "~r{hello}" ~> "~r/hello/"
     ~S"~r/\//" ~> "~r(/)"
-    ~S"~r/\/()/" ~> ~S"~r(/(\))" <> ""
+  end
+
+  test "r sigil 2" do
+    ~S"~r/\/()/" ~> ~S"~r(/(\))"
   end
 
   test "s sigils" do
@@ -49,20 +52,30 @@ defmodule Exfmt.Integration.SigilTest do
     ~S(ø)
     """
   end
-  #
-  # TODO: Work out what is suppsed to happen here.
-  # I can't work out a way to render this in a fashion
-  # that makes the compiler happy.
-  # I'm wondering if there is a bug in the parser. There
-  # seems to be a bug in the Inspect protocol.
-  # https://github.com/elixir-lang/elixir/issues/6255
-  #
-  @tag :skip
+
   test "sigil containing new close char that will need to be escaped" do
     ~S"""
     ~R" \( \) / "
     """ ~> ~S"""
     ~R( \( \\\) / )
+    """
+  end
+
+  test "sigil defintions" do
+    assert_format """
+    defmacro sigil_T(date, modifiers)
+    """
+    assert_format """
+    def sigil_u(content, modifiers)
+    """
+  end
+
+  test "unsugared sigil defintions" do
+    assert_format """
+    sigil_T("123", [])
+    """
+    assert_format """
+    sigil_u("456", [])
     """
   end
 end

@@ -1,6 +1,20 @@
 Changelog
 =========
 
+## Unreleased
+
+- Rendering of more expressions:
+  - Unsugared sigils.
+  - Calls to `__block__/0`
+  - Aliases with a quoted base module.
+  - Atoms starting with `Elixir.`.
+  - Calls to function name atoms from another function.
+  - Module attributes with values that have a block.
+- Fix: Parse comments from files containing `?\"`, `?\'`, or heredocs.
+- Fix: Avoid applying `do` syntactic sugar to unsupported block words.
+- Fix: Correctly escape sigils containing their close character.
+
+
 ## v0.2.3 - 2017-07-04
 
 - Rendering of more expressions:
