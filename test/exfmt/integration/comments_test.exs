@@ -52,14 +52,10 @@ defmodule Exfmt.Integration.CommentsTest do
   end
 
   test "comment arg containing comment in last place" do
-    """
+    assert_format """
     call(arg()
         # Hello
     )
-
-    """ ~> """
-    call arg()
-    # Hello
 
     """
   end

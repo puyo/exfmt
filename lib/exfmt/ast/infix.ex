@@ -1,6 +1,6 @@
 defmodule Exfmt.Ast.Infix do
   @moduledoc """
-  Handling the conversion of infix operators to Algebgra.
+  Handling the conversion of infix operators to Algebra.
 
   We need to be especially careful when rendering infix
   operators because we may need to render them differently
@@ -24,10 +24,9 @@ defmodule Exfmt.Ast.Infix do
   alias Exfmt.Context
   alias Exfmt.Ast.Util
 
-  @infix_ops [:===, :!==, :==, :!=, :<=, :>=, :&&, :||, :<>, :++, :--, :\\,
-              :::, :<-, :.., :|>, :=~, :<, :>, :->, :+, :-, :*, :/, :=, :|,
-              :., :and, :or, :when, :in, :~>>, :<<~, :~>, :<~, :<~>, :<|>,
-              :<<<, :>>>, :|||, :&&&, :^^^, :~~~]
+  @infix_ops ~W(=== !== == != <= >= && || <> ++ -- \\ :: <- .. |> =~ < > -> +
+                - * / = | . and or when in ~>> <<~ ~> <~ <~> <|> <<< >>> |||
+                &&& ^^^ ~~~)a
 
   @doc """
   A compile time list of all the infix operator atoms.
@@ -49,15 +48,43 @@ defmodule Exfmt.Ast.Infix do
     with [parent | _] <- ctx.stack,
          {parent_assoc, parent_prec} <- binary_op_props(parent),
          {_, prec} <- binary_op_props(op) do
-      presedence_wrap?(side, prec, parent_prec, parent_assoc)
+      presedence_wrap? side, prec, parent_prec, parent_assoc
     else
       _ ->
         false
     end
   end
 
-  def wrap?(ast, _, _) do
-    Util.call_with_block? ast
+
+  def wrap?({:__block__, _, [ast]}, side, ctx) do
+    wrap? ast, side, ctx
+  end
+
+  def wrap?({:__block__, _, _}, _, _) do
+    true
+  end
+
+
+  def wrap?({:@, _, [{_, _, value}]}, _, _) when value != nil do
+    true
+  end
+
+  def wrap?({:&, _, [arg]}, _, _) when not is_integer(arg) do
+    true
+  end
+
+
+  def wrap?(ast, _, ctx) do
+    case ctx.stack do
+      [_, :do | _] ->
+        false
+
+      [_, _, :call | _] ->
+        Util.call_with_block? ast
+
+      _ ->
+        false
+    end
   end
 
 
@@ -74,26 +101,57 @@ defmodule Exfmt.Ast.Infix do
   # This function has been adapted from
   # `elixir-lang/elixir/lib/elixir/lib/macro.ex`
   #
-  @spec binary_op_props(atom) :: {:left | :right, precedence :: integer} | :not_op
+  @spec binary_op_props(atom) :: {:left | :right, precedence :: integer}
+  | :not_op
   defp binary_op_props(o) do
     case o do
-      o when o in [:<-, :\\]                  -> {:left,  40}
-      :when                                   -> {:right, 50}
-      :::                                     -> {:right, 60}
-      :|                                      -> {:right, 70}
-      :=                                      -> {:right, 90}
-      o when o in [:||, :|||, :or]            -> {:left, 130}
-      o when o in [:&&, :&&&, :and]           -> {:left, 140}
-      o when o in [:==, :!=, :=~, :===, :!==] -> {:left, 150}
-      o when o in [:<, :<=, :>=, :>]          -> {:left, 160}
-      o when o in [:|>, :<<<, :>>>, :<~, :~>,
-                :<<~, :~>>, :<~>, :<|>, :^^^] -> {:left, 170}
-      :in                                     -> {:left, 180}
-      o when o in [:++, :--, :.., :<>]        -> {:right, 200}
-      o when o in [:+, :-]                    -> {:left, 210}
-      o when o in [:*, :/]                    -> {:left, 220}
-      :.                                      -> {:left, 310}
-      _                                       -> :not_op
+      o when o in [:<-, :\\] ->
+        {:left, 40}
+
+      :when ->
+        {:right, 50}
+
+      ::: ->
+        {:right, 60}
+
+      :| ->
+        {:right, 70}
+
+      := ->
+        {:right, 90}
+
+      o when o in [:||, :|||, :or] ->
+        {:left, 130}
+
+      o when o in [:&&, :&&&, :and] ->
+        {:left, 140}
+
+      o when o in [:==, :!=, :=~, :===, :!==] ->
+        {:left, 150}
+
+      o when o in [:<, :<=, :>=, :>] ->
+        {:left, 160}
+
+      o when o in [:|>, :<<<, :>>>, :<~, :~>, :<<~, :~>>, :<~>, :<|>, :^^^] ->
+        {:left, 170}
+
+      :in ->
+        {:left, 180}
+
+      o when o in [:++, :--, :.., :<>] ->
+        {:right, 200}
+
+      o when o in [:+, :-] ->
+        {:left, 210}
+
+      o when o in [:*, :/] ->
+        {:left, 220}
+
+      :. ->
+        {:left, 310}
+
+      _ ->
+        :not_op
     end
   end
 end

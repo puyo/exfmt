@@ -34,6 +34,7 @@ defmodule Exfmt do
     with {:ok, formatted} <- unsafe_format(source, max_width) do
       original_ast = Code.string_to_quoted!(source)
       formatted_ast = Code.string_to_quoted!(formatted)
+
       if Ast.eq?(original_ast, formatted_ast) do
         {:ok, formatted}
       else
@@ -82,24 +83,36 @@ defmodule Exfmt do
 
   """
   @spec unsafe_format(String.t, integer) :: {:ok, String.t} | SyntaxError.t
-  def unsafe_format(source, max_width \\ @max_width) do
-    indent = leading_indent(source)
-    leading_whitespace = leading_whitespace(source, indent)
-    trailing_whitespace = trailing_whitespace(source)
+  def unsafe_format(source, max_width \\ @max_width)
 
-    with {:ok, tree} <- Code.string_to_quoted(source),
-         {:ok, comments} <- Comment.extract_comments(source) do
-      result =
-        tree
-        |> do_format(comments, max_width - indent)
-        |> add_leading_indent(indent)
-        |> add_trailing_whitespace(trailing_whitespace)
-        |> add_leading_whitespace(leading_whitespace)
-        |> strip_trailing_line_whitespace
-      {:ok, result}
+  def unsafe_format("", _) do
+    {:ok, ""}
+  end
+
+  def unsafe_format(source, max_width) do
+    regex_result = Regex.run(~r/^\s+$/m, source)
+    if not is_nil(regex_result) do
+      {:ok, source}
     else
-      {:error, error} ->
-        SyntaxError.exception(error)
+      indent = leading_indent(source)
+      leading_whitespace = leading_whitespace(source, indent)
+      trailing_whitespace = trailing_whitespace(source)
+
+      parse_opts = [wrap_literals_in_blocks: true]
+      with {:ok, tree} <- Code.string_to_quoted(source, parse_opts),
+          {:ok, comments} <- Comment.extract_comments(source) do
+        result =
+          tree
+          |> do_format(comments, max_width - indent)
+          |> add_leading_indent(indent)
+          |> add_trailing_whitespace(trailing_whitespace)
+          |> add_leading_whitespace(leading_whitespace)
+          |> strip_trailing_line_whitespace
+        {:ok, result}
+      else
+        {:error, error} ->
+          SyntaxError.exception(error)
+      end
     end
   end
 
@@ -121,14 +134,15 @@ defmodule Exfmt do
     end
   end
 
+
   #
   # Private
   #
-
   defp do_format(tree, comments, max_width) do
-    new_tree = Ast.preprocess(tree)
+    new_tree = Ast.insert_empty_lines(tree)
     comments
     |> Comment.merge(new_tree)
+    |> Ast.compact_wrapped_literals()
     |> Ast.to_algebra(Context.new)
     |> Algebra.format(max_width)
     |> IO.chardata_to_string()
@@ -189,7 +203,7 @@ defmodule Exfmt do
   defp strip_trailing_line_whitespace(source) do
     source
     |> String.split("\n")
-    |> Enum.map(&String.rstrip/1)
+    |> Enum.map(&String.trim_trailing/1)
     |> Enum.join("\n")
   end
 end

@@ -10,6 +10,19 @@ defmodule Exfmt.Integration.DefTest do
     """
   end
 
+  test "def with long guard" do
+    """
+    def one?(x) when x in [:one, "one", 1, "1"] do
+      true
+    end
+    """ ~> """
+    def one?(x)
+        when x in [:one, "one", 1, "1"] do
+      true
+    end
+    """
+  end
+
   test "def spacing" do
     assert_format """
     def one(1) do
@@ -49,6 +62,14 @@ defmodule Exfmt.Integration.DefTest do
     assert_format ~S"""
     defmacrop unquote(name)(arg) do
       arg
+    end
+    """
+  end
+
+  test "negated guard" do
+    assert_format """
+    def run(x) when not is_binary(x) do
+      x
     end
     """
   end

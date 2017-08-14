@@ -8,7 +8,7 @@ defmodule Exfmt.Integration.IndentationTest do
 
   test "multiple lines of code" do
     assert_format """
-        fn(x) ->
+        fn x ->
           y = x + x
           y
         end
@@ -18,7 +18,8 @@ defmodule Exfmt.Integration.IndentationTest do
   test "multiple lines of code padded with blank lines" do
     assert_format """
 
-        fn(x) ->
+
+        fn x ->
           y = x + x
           y
         end

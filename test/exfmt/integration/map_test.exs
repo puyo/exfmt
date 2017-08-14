@@ -10,6 +10,38 @@ defmodule Exfmt.Integration.MapTest do
     assert_format "%{1 => 1, 2 => 2}"
   end
 
+  test "multiline maps" do
+    assert_format """
+    %{
+      foo: 1,
+      bar: 2,
+      baz: 3,
+      somereallylongkey: 4,
+    }
+    """
+
+    """
+    %{foo: 1, bar: 2, baz: 3, somereallylongkey: 4, theotherkey: 5}
+    """ ~> """
+    %{
+      foo: 1,
+      bar: 2,
+      baz: 3,
+      somereallylongkey: 4,
+      theotherkey: 5,
+    }
+    """
+
+    assert_format """
+    var = %{
+      foo: 1,
+      bar: 2,
+      baz: 3,
+      somereallylongkey: 4,
+    }
+    """
+  end
+
   test "map upsert %{map | key: value}" do
     "%{map | key: value}" ~> "%{map | key: value}"
   end
@@ -27,7 +59,7 @@ defmodule Exfmt.Integration.MapTest do
     %{alpha_numeric_integer_long_name_with_lots_of_characters: 1}
     """ ~> """
     %{
-      alpha_numeric_integer_long_name_with_lots_of_characters: 1
+      alpha_numeric_integer_long_name_with_lots_of_characters: 1,
     }
     """
   end
@@ -40,9 +72,8 @@ defmodule Exfmt.Integration.MapTest do
     %LongerNamePerson{timmy | name: "Timmy", age: 1}
     """ ~> """
     %LongerNamePerson{timmy |
-      name: "Timmy",
-      age: 1
-    }
+                      name: "Timmy",
+                      age: 1}
     """
     assert_format "%Inspect.Opts{}"
   end
@@ -80,13 +111,30 @@ defmodule Exfmt.Integration.MapTest do
     """
   end
 
-  test "nested map" do
+  test "struct with pinned type" do
     assert_format """
-    %{
-      very_long_variable_name_that_causes_break_mode: %{
-        "b" => 1
-      }
-    }
+    %^struct{} = user
+    """
+  end
+
+  test "struct with unquoted type" do
+    assert_format """
+    %unquote(User){foo: 1}
+    """
+  end
+
+  test "range" do
+    assert_format """
+    1..2
+    """
+  end
+
+  test "range.attribute" do
+    assert_format """
+    (1..2).first
+    """
+    assert_format """
+    (1..2).last
     """
   end
 end

@@ -3,16 +3,63 @@ Changelog
 
 ## Unreleased
 
+- exfmt now targets the unreleased master (v1.6) branch of the Elixir
+  compiler. This allows use of new Elixir parser features such as preservation
+  of sigil terminators, character literals and line numbers for AST literals.
+- Multi-line lists are now rendered with braces on their own lines.
+- Indentation improvements.
+- Rendering of more expressions:
+  - Character literals.
+  - Heredoc strings.
+
+
+## v0.4.0 - 2017-08-02
+
+- Support for Elixir v1.4 and lower has been dropped. This enables the use of
+  new features added to the Elixir tokenizer and parser in v1.5.
+- Editor integration for Visual Studio Code. (@securingsincity)
+- Source code can be checked for correct formatting using the `--check` flag.
+  (@thetamind)
+- Large integers are now `_` delimited for readability. (@jfornoff)
+- Multi-line map braces are now placed on own line. (@jfornoff)
+- Multi-line maps are rendered with trailing newlines.
+- `fn`s are now rendered without parens around their arguments (@jfornoff)
+- Fix: Prevent `fn` arrows from wrapping onto next line. (@jfornoff)
+- Fix: Don't insert `__block__()` when formatting an empty string.
+
+
+## v0.3.0 - 2017-07-26
+
+- Source code for formatting can be read from STDIN using the `--stdin`
+  flag. (@binaryseed)
+- CLI now reports errors with STDERR and exit codes. (@binaryseed)
+  flag. (@binaryseed)
+- Editor integration for Atom. (@rgreenjr)
+- Editor integration for Vim. (@jfornoff)
+- Anon functions now always has a space between `fn` and `->`. (@jfornoff)
+- Rendering captured `&&/2`.
+
+
+## v0.2.4 - 2017-07-20
+
 - Rendering of more expressions:
   - Unsugared sigils.
   - Calls to `__block__/0`
+  - Calls to `__aliases__/1`.
   - Aliases with a quoted base module.
   - Atoms starting with `Elixir.`.
   - Calls to function name atoms from another function.
   - Module attributes with values that have a block.
+  - Struct patterns with pinned types.
+  - Infix operators with module attribute assignment arguments.
+  - Infix operators with captured fn arguments.
+  - Infix operators with block arguments.
+  - Structs with unquoted types.
+  - Range structs.
 - Fix: Parse comments from files containing `?\"`, `?\'`, or heredocs.
 - Fix: Avoid applying `do` syntactic sugar to unsupported block words.
 - Fix: Correctly escape sigils containing their close character.
+- Fix: Correctly escape strings containing interpolation and newlines.
 
 
 ## v0.2.3 - 2017-07-04
@@ -34,12 +81,13 @@ Changelog
 Map updates wand captured map update functions.
 - Fix: Correctly render multi-arity and multi-clause fns that have
   guard clauses.
-- Fix: Surround call args with parems when any argument is a call
+- Fix: Surround call arguments with parems when any argument is a call
   with block arguments. This prevents the block being mistakenly
   assigned to the top level call instead of the child call.
 - Fix: Avoid truncating large collections.
 - Fix: Avoid corrupting utf8 characters in string interpolation
   and sigils.
+
 
 ## v0.2.2 - 2017-06-13
 

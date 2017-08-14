@@ -8,9 +8,16 @@ defmodule Exfmt.Integration.FnTest do
     "&merge(&2, &1)" ~> "&merge(&2, &1)"
   end
 
-  test "captured infix operators" do
+  test "captured +/2" do
     "&(&2 + &1)" ~> "& &2 + &1"
+  end
+
+  test "captured &1.prop" do
     "(& &1.name)" ~> "& &1.name"
+  end
+
+  test "captured &&/2" do
+    "&(&&/2)" ~> "& &&/2"
   end
 
   test "captured qualified function" do
@@ -23,15 +30,34 @@ defmodule Exfmt.Integration.FnTest do
   end
 
   test "fn" do
-    assert_format "fn-> :ok end"
-    assert_format "fn(x) -> x end"
+    assert_format "fn -> :ok end"
+    assert_format "fn x -> x end"
     """
-    fn(x) -> y = x + x; y end
+    fn x -> y = x + x; y end
     """ ~> """
-    fn(x) ->
+    fn x ->
       y = x + x
       y
     end
+    """
+  end
+
+  test "fn in long function calls" do
+    """
+    Enum.find([1,2,3,4], fn num -> rem(num, 2) == 0 end)
+    """ ~> """
+    Enum.find [1, 2, 3, 4],
+              fn num ->
+                rem(num, 2) == 0
+              end
+    """
+
+    """
+    Logger.debug fn -> "Hey this is a long log message!" end
+    """ ~> """
+    Logger.debug fn ->
+                   "Hey this is a long log message!"
+                 end
     """
   end
 
@@ -81,7 +107,7 @@ defmodule Exfmt.Integration.FnTest do
 
   test "multi-arity fun with when guard" do
     assert_format """
-    fn(:ok, x) when is_map(x) -> x end
+    fn :ok, x when is_map(x) -> x end
     """
   end
 
@@ -94,6 +120,12 @@ defmodule Exfmt.Integration.FnTest do
       _, _ ->
         :error
     end
+    """
+  end
+
+  test "infix op with captured fn arg" do
+    assert_format """
+    (&List.flatten(&1)) == (&List.flatten/1)
     """
   end
 end

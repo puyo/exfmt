@@ -9,16 +9,16 @@
 > `exfmt` is in alpha.  If you run into any problems, please
 > [report them][issues].
 >
-> Currently exfmt does not always produce semantically identical formatted
-> Elixir. There are checks to prevent data loss, but please ensure you have
-> backed up your code before running `exfmt` during this alpha stage.
->
 > **The format produced by exfmt will change significantly before the 1.0.0
 > release.**  If this will cause problems for you, please refrain from using
 > exfmt during the alpha- and beta-test periods.
 
-`exfmt` formats [Elixir][elixir] source code according to a standard set of
-rules. It is inspired by Aaron VonderHaar's [elm-format][elm-format].
+[issues]: https://github.com/lpil/exfmt/issues
+
+`exfmt` is inspired by Aaron VonderHaar's [elm-format][elm-format], and aims
+to formats [Elixir][elixir] source code largely according to the standards
+defined in Aleksei Magusev's [Elixir Style Guide][style-guide].
+
 
 ```elixir
 # exfmt takes any Elixir code...
@@ -57,15 +57,18 @@ The benefits of `exfmt`:
  - It **saves you time** because you don't have to nitpick over formatting
    details of your code.
 
-[issues]: https://github.com/lpil/exfmt/issues
-[prs]: https://github.com/lpil/exfmt/pulls
 [elixir]: https://elixir-lang.org/
 [elm-format]: https://github.com/avh4/elm-format
+[style-guide]: https://github.com/lexmag/elixir-style-guide
 
 
 ## Contents
 
 - [Usage](#usage)
+- [Editor Integration](#editor-integration)
+  - [Atom](#atom)
+  - [Vim](#vim)
+  - [VS Code](#visual-studio-code)
 - [Development](#development)
 
 
@@ -77,28 +80,38 @@ mix exfmt path/to/file.ex
 ```
 
 
-## Development
+## Editor integration
 
-`exfmt` is an open project, contributions are very much welcomed. If you have
-feedback or have found a bug, please open [an issue][issues]. If you wish to
-make a code contribution please open a [pull request][prs], though for larger
-code changes it may be good to open an issue first so we can work out the best
-way to move forward.
+### Atom
 
-Please note that this project is released with a [Contributor Code of
-Conduct](CODE_OF_CONDUCT.md). By participating in this project you agree to
-abide by its terms.
+Atom users can install Ron Green's [exfmt-atom][exfmt-atom] package.
 
-```sh
-# Install the deps
-mix deps.get
+[exfmt-atom]: https://atom.io/packages/exfmt-atom
 
-# Run the tests
-mix test
 
-# Run the tests when files change
-mix test.watch
+### Vim
 
-# Run the type checker
-mix dialyzer
+Vim users can use exfmt with Steve Dignam's [Neoformat][neoformat].
+
+[neoformat]: https://github.com/sbdchd/neoformat
+
+Once installed the following config will enable formatting of the current
+Elixir buffer using `:Neoformat`. For further instructions, please reference
+the Neoformat documentation.
+
+```viml
+let g:neoformat_elixir_exfmt = {
+  \ 'exe': 'mix',
+  \ 'args': ['exfmt', '--stdin'],
+  \ 'stdin': 1
+  \ }
+
+let g:neoformat_enabled_elixir = ['exfmt']
 ```
+
+
+### Visual Studio Code
+
+VSCode users can use exfmt with James Hrisho's [vscode-exfmt][vscode-exfmt] package.
+
+[vscode-exfmt]: https://github.com/securingsincity/vscode-exfmt

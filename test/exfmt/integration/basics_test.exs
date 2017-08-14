@@ -11,6 +11,18 @@ defmodule Exfmt.Integration.BasicsTest do
     assert_format "-2"
   end
 
+  test "large ints" do
+    assert_format "10000"
+    assert_format "100_000"
+    assert_format "1_000_000"
+
+    "1000" ~> "1000"
+    "10000" ~> "10000"
+    "99999" ~> "99999"
+    "100000" ~> "100_000"
+    "1000000" ~> "1_000_000"
+  end
+
   test "floats" do
     "0.000" ~> "0.0"
     "1.111" ~> "1.111"
@@ -72,9 +84,24 @@ defmodule Exfmt.Integration.BasicsTest do
     ["a very long string that is too long to fit into the wrap width"]
     """ ~> """
     [
-      "a very long string that is too long to fit into the wrap width"
+      "a very long string that is too long to fit into the wrap width",
     ]
     """
+  end
+
+  test "chars" do
+    assert_format "?a"
+    assert_format "??"
+    assert_format ~S"?\\" <> "\n"
+    assert_format ~S"?\n" <> "\n"
+    assert_format ~S"?\r" <> "\n"
+    assert_format ~S"?\t" <> "\n"
+    assert_format ~S"?\v" <> "\n"
+    assert_format ~S"?\b" <> "\n"
+    assert_format ~S"?\f" <> "\n"
+    assert_format ~S"?\e" <> "\n"
+    assert_format ~S"?\d" <> "\n"
+    assert_format ~S"?\a" <> "\n"
   end
 
   test "lists" do
@@ -96,12 +123,12 @@ defmodule Exfmt.Integration.BasicsTest do
       9,
       10,
       11,
-      12
+      12,
     ]
     """
   end
 
-  test "really long lists" do
+  test "long lists" do
     assert_format """
     [
       48,
@@ -154,11 +181,10 @@ defmodule Exfmt.Integration.BasicsTest do
       48,
       48,
       48,
-      48
+      48,
     ]
     """
   end
-
 
   test "tuples" do
     "{}" ~> "{}"
@@ -181,27 +207,27 @@ defmodule Exfmt.Integration.BasicsTest do
     @sizes [1,2,3,4,5,6,7,8,9,10,11]
     """ ~> """
     @sizes [
-             1,
-             2,
-             3,
-             4,
-             5,
-             6,
-             7,
-             8,
-             9,
-             10,
-             11
-           ]
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+    ]
     """
   end
 
   test "module attribute with block call arg" do
     assert_format """
     @ok (case ok do
-           _ ->
-             :ok
-         end)
+       _ ->
+         :ok
+     end)
     """
   end
 
@@ -364,6 +390,48 @@ defmodule Exfmt.Integration.BasicsTest do
     assert :ok == (run do
                :ok
              end)
+    """
+  end
+
+  test "infix op with attribute assignment argument" do
+    assert_format """
+    (@value 1) == :ok
+    """
+    assert_format """
+    :ok == (@value 1)
+    """
+    assert_format """
+    :ok == @value
+    """
+  end
+
+  test "infix op with block argument" do
+    assert_format """
+    _ = (nil
+      nil)
+    """
+  end
+
+  test "direct call to __aliases__/1" do
+    assert_format """
+    __aliases__(args)
+    """
+  end
+
+  test "assignment with case" do
+    assert_format """
+    x = case y do
+        :ok ->
+          :ok
+      end
+    """
+    assert_format """
+    defp read_source do
+      source = case :ok do
+          :ok ->
+            :ok
+        end
+    end
     """
   end
 end
